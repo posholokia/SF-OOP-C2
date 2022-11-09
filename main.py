@@ -90,8 +90,11 @@ class User(Player):
                 continue
 
             x, y = int(x), int(y)
-
-            return Dot(x - 1, y - 1)
+            d = Dot(x - 1, y - 1)
+            if d not in self.enemy.free_dots:
+                raise BoardUsedException()
+            self.enemy.free_dots.remove(d)
+            return d
 
 
 class Game:  # основная логика
