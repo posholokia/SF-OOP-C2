@@ -134,7 +134,6 @@ class Board:
         self.count = 0  # количество утопленных кораблей
         self.field = [["O"] * size for _ in range(size)]  # сама доска
 
-        self.busy = []  # здесь точки кораблей\утопленных для обводки вокруг
         self.ships = []  # здесь сами корабли (объекты класса)
         self.free_dots = []  # куда можем походить\поставить корабль
 
@@ -151,7 +150,6 @@ class Board:
                 raise BoardWrongShipException()
         for d in ship.dots:
             self.field[d.x][d.y] = "■"  # расставляем корабли на поле
-            self.busy.append(d)  # чтобы не закрасила обводка
 
         self.ships.append(ship)  # добавляем корабль в список
         if manual:  # показываем обводку при ручной расстановке
@@ -169,7 +167,7 @@ class Board:
             for dx, dy in near:
                 cur = Dot(d.x + dx, d.y + dy)  # в цикле получаем все точки вокруг точки корабля
                 if not (self.out(cur)):  # если точки внутри доски
-                    if verb and cur not in self.busy:  # если показываем обводку и точка не занята кораблем
+                    if verb and cur not in ship.dots:  # если показываем обводку и точка не занята кораблем
                         self.field[cur.x][cur.y] = "."
                     if cur in self.free_dots:  # удаляем свободные точки вокруг корабля
                         self.free_dots.remove(cur)
@@ -194,7 +192,6 @@ class Board:
             if d in ship.dots:  # если выстрел попал в корабль
                 ship.lives -= 1
                 self.field[d.x][d.y] = "X"
-                self.busy.append(d)  # чтобы не закрасить обводкой после уничтожения корабля
                 if ship.lives == 0:
                     self.count += 1  # увеличиваем счетчик потопленных кораблей
                     self.contour(ship, verb=True)  # обводим утопленный корабль
