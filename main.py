@@ -27,28 +27,31 @@ class AI(Player):  # ход компьютера
         return d
 
 
-class ImprovedAI(AI):  # усовершенствованный АИ
-    kill_ship = []  # возможные точки нахождения корабля после попадания
+class ImprovedAI(Player):  # усовершенствованный АИ
+    kill_ship = []  # список для добивания - возможные точки нахождения корабля после попадания
     name = 'Компьютер'
 
     def ask(self):  # переопределяем метод запроса координат
         if self.kill_ship:  # сперва пытаемся добить
-            d = self.kill_ship.pop(randint(0, len(self.kill_ship) - 1))
+            d = self.kill_ship.pop(randint(0, len(self.kill_ship) - 1))  # берем точки из списка добивания
+            if d in self.enemy.free_dots:  # если точка свободная, то возвращаем ее
+                self.enemy.free_dots.remove(d)
+                print(f"Ход компьютера: {d.x + 1} {d.y + 1}")
+                return d
+            else:  # если нет, берем другую точку из списка добивания
+                return self.ask()
         else:  # случайный ход по свободным точкам
             d = self.enemy.free_dots.pop(randint(0, len(self.enemy.free_dots) - 1))
-        print(f"Ход компьютера: {d.x + 1} {d.y + 1}")
+            print(f"Ход компьютера: {d.x + 1} {d.y + 1}")
         return d
 
     def move(self):  # переопределим метод
         while True:
-            try:
-                target = self.ask()
-                repeat = self.enemy.shot(target)
-                if repeat:  # если попали, создаем список точек для добивания
-                    self.kill(target)
-                return repeat
-            except BoardException as e:
-                print(e)
+            target = self.ask()
+            repeat = self.enemy.shot(target)
+            if repeat:  # если попали, создаем список точек для добивания
+                self.kill(target)
+            return repeat
 
     def kill(self, target):
         busy = [
@@ -60,6 +63,7 @@ class ImprovedAI(AI):  # усовершенствованный АИ
             y = dy + target.y
             if Dot(x, y) in self.enemy.free_dots:
                 self.enemy.free_dots.remove(Dot(x, y))  # поэтому диагональные точки от места попадания нужно исключить
+                
         near = [
             (0, 1),
             (-1, 0), (1, 0),
@@ -111,7 +115,7 @@ class Game:  # основная логика
             pl = self.manual_board()  # если да, запускаем ручную расстановку кораблей
         else:
             pl = self.random_board()  # иначе генерируем случайную доску
-        co.hid = True  # скрываем доску компьютера
+        co.hid = False  # скрываем доску компьютера
         self.ai = ImprovedAI(co, pl)  # создаем объекты игроков
         self.us = User(pl, co)
 
